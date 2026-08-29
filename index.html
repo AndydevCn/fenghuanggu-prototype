@@ -389,6 +389,14 @@
       color: #1C2B2B;
       transition: all 0.2s ease;
       user-select: none;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .time-slot:focus,
+    .time-slot:focus-visible,
+    .time-slot:active {
+      outline: none;
+      box-shadow: none;
     }
     .time-slot:hover:not(.full):not(.selected) {
       border-color: #2E7D75;
