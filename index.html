@@ -398,9 +398,11 @@
       outline: none;
       box-shadow: none;
     }
-    .time-slot:hover:not(.full):not(.selected) {
-      border-color: #2E7D75;
-      background: #E8F0EF;
+    @media (hover: hover) and (pointer: fine) {
+      .time-slot:hover:not(.full):not(.selected) {
+        border-color: #2E7D75;
+        background: #E8F0EF;
+      }
     }
     .time-slot.selected {
       background: #2E7D75;
