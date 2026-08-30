@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="creative-medium" content="interactive-prototype" />
+<title>凤凰谷项目开业邀请 · 手势交互 Demo</title>
+
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" />
+
+<style>
+  :root {
+    --bg-deep: #0A1628;
+    --bg-mid: #0F1F38;
+    --gold: #C9A962;
+    --gold-light: #E8D5A0;
+    --gold-dark: #A68B3D;
+    --cream: #E8E0CC;
+    --cream-dim: #B8AE97;
+    --ink: #F5F0E3;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #000;
+    font-family: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--ink);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  /* === 演示容器（桌面端居中展示手机框） === */
+  .stage {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(ellipse at center, #1a2840 0%, #050911 70%);
+    padding: 24px;
+  }
+
+  .device-wrap {
+    flex-shrink: 0;
+  }
+
+  .hint-text {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(232, 224, 204, 0.5);
+    font-size: 13px;
+    letter-spacing: 2px;
+    font-weight: 300;
+    white-space: nowrap;
+  }
+
+  /* === 手机屏容器 === */
+  .phone-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-deep);
+  }
+
+  /* === 三页翻页容器 === */
+  .pages {
+    position: absolute; inset: 0;
+    transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+    will-change: transform;
+  }
+
+  .page {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .page-1 { top: 0; }
+  .page-2 { top: 100%; }
+  .page-3 { top: 200%; }
+
+  /* === 公共背景装饰 === */
+  .bg-layer {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(201, 169, 98, 0.12) 0%, transparent 55%),
+      radial-gradient(ellipse at 20% 80%, rgba(201, 169, 98, 0.06) 0%, transparent 40%),
+      linear-gradient(180deg, var(--bg-mid) 0%, var(--bg-deep) 100%);
+  }
+
+  .bg-pattern {
+    position: absolute; inset: 0;
+    opacity: 0.04;
+    background-image:
+      linear-gradient(var(--gold-light) 1px, transparent 1px),
+      linear-gradient(90deg, var(--gold-light) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* 装饰角框 */
+  .corner {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--gold);
+    opacity: 0.7;
+  }
+  .corner.tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+  .corner.tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+  .corner.bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+  .corner.br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+  /* 竖排装饰文字 */
+  .decor-text-vertical {
+    position: absolute;
+    writing-mode: vertical-rl;
+    font-family: "Noto Serif SC", serif;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--gold);
+    opacity: 0.4;
+  }
+
+  /* === 页面内容通用 === */
+  .page-inner {
+    position: relative;
+    height: 100%;
+    padding: 70px 32px 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+  }
+
+  /* === 第一页：主邀请 === */
+  .page-1 .page-inner {
+    justify-content: center;
+  }
+
+  .invite-label {
+    font-family: "Noto Serif SC", serif;
+    font-size: 13px;
+    letter-spacing: 8px;
+    color: var(--gold);
+    font-weight: 400;
+    margin-bottom: 36px;
+    opacity: 0.9;
+  }
+
+  .main-title {
+    font-family: "Noto Serif SC", serif;
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: transparent;
+    background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    line-height: 1.3;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .subtitle-en {
+    font-family: "Noto Serif SC", serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    opacity: 0.7;
+  }
+
+  .divider-gold {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin-bottom: 36px;
+  }
+
+  .invite-msg {
+    font-size: 14px;
+    line-height: 2;
+    text-align: center;
+    color: var(--cream);
+    font-weight: 300;
+    letter-spacing: 1px;
+    max-width: 260px;
+  }
+
+  .invite-msg strong {
+    color: var(--gold-light);
+    font-weight: 500;
+  }
+
+  /* === 第二页：项目内容 === */
+  .page-2 .page-inner {
+    justify-content: flex-start;
+    padding-top: 80px;
+  }
+
+  .page-eyebrow {
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--gold);
+    font-family: "Noto Serif SC", serif;
+    margin-bottom: 20px;
+    opacity: 0.8;
+  }
+
+  .page-title {
+    font-family: "Noto Serif SC", serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--gold-light);
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .page-subtitle {
+    font-size: 12px;
+    color: var(--cream-dim);
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .feature-list {
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .feature-item {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .feature-num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Noto Serif SC", serif;
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 600;
+    opacity: 0.8;
+  }
+
+  .feature-content h4 {
+    font-family: "Noto Serif SC", serif;
+    font-size: 16px;
+    color: var(--ink);
+    font-weight: 600;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+
+  .feature-content p {
+    font-size: 12px;
+    color: var(--cream-dim);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  /* 中央装饰徽章 */
+  .seal-badge {
+    width: 90px;
+    height: 90px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 40px auto 0;
+    position: relative;
+    opacity: 0.7;
+  }
+  .seal-badge::before {
+    content: "";
+    position: absolute; inset: 6px;
+    border: 1px solid rgba(201, 169, 98, 0.4);
+    border-radius: 50%;
+  }
+  .seal-inner {
+    font-family: "Noto Serif SC", serif;
+    font-size: 14px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+
+  /* === 第三页：预约 === */
+  .page-3 .page-inner {
+    justify-content: center;
+  }
+
+  .page-3 .final-emblem {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 40px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .final-emblem::before,
+  .final-emblem::after {
+    content: "";
+    position: absolute;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    opacity: 0.6;
+  }
+  .final-emblem::before { inset: 0; animation: emblemPulse 3s ease-in-out infinite; }
+  .final-emblem::after { inset: 12px; opacity: 0.4; }
+
+  .final-emblem-inner {
+    font-family: "Noto Serif SC", serif;
+    font-size: 22px;
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 3px;
+    z-index: 2;
+  }
+
+  .final-title {
+    font-family: "Noto Serif SC", serif;
+    font-size: 32px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--gold-light);
+    letter-spacing: 6px;
+    line-height: 1.4;
+    margin-bottom: 14px;
+  }
+
+  .final-subtitle {
+    font-size: 13px;
+    color: var(--cream-dim);
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 50px;
+    line-height: 1.8;
+  }
+
+  /* 预约按钮 */
+  .cta-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 220px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+    color: var(--bg-deep);
+    font-family: "Noto Serif SC", serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow:
+      0 4px 20px rgba(201, 169, 98, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    animation: ctaPulse 2.2s ease-in-out infinite;
+  }
+
+  .cta-btn::before {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    opacity: 0.5;
+    animation: ctaRing 2.2s ease-in-out infinite;
+  }
+
+  .cta-btn:active {
+    transform: scale(0.97);
+  }
+
+  /* === 底部箭头引导 === */
+  .arrow-hint {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    z-index: 10;
+  }
+
+  .arrow-hint-text {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    opacity: 0.6;
+    animation: arrowFade 2s ease-in-out infinite;
+  }
+
+  .arrow-svg {
+    width: 24px;
+    height: 24px;
+    animation: arrowBounce 2s ease-in-out infinite;
+  }
+
+  .arrow-svg svg {
+    width: 100%; height: 100%;
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 1.5;
+  }
+
+  /* === 页面指示器 === */
+  .page-indicator {
+    position: absolute;
+    top: 50px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 20;
+    transform: translateY(-50%);
+    top: 50%;
+  }
+
+  .indicator-dot {
+    width: 3px;
+    height: 20px;
+    border-radius: 2px;
+    background: rgba(201, 169, 98, 0.25);
+    transition: all 0.5s ease;
+  }
+
+  .indicator-dot.active {
+    background: var(--gold);
+    height: 32px;
+  }
+
+  /* === 动画 === */
+  @keyframes arrowBounce {
+    0%, 100% { transform: translateY(0); opacity: 0.9; }
+    50% { transform: translateY(10px); opacity: 0.5; }
+  }
+
+  @keyframes arrowFade {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 0.3; }
+  }
+
+  @keyframes ctaPulse {
+    0%, 100% {
+      box-shadow:
+        0 4px 20px rgba(201, 169, 98, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow:
+        0 6px 30px rgba(201, 169, 98, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      transform: scale(1.03);
+    }
+  }
+
+  @keyframes ctaRing {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.5;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.2;
+    }
+  }
+
+  @keyframes emblemPulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.08); opacity: 0.3; }
+  }
+
+  /* 页面进入动效 */
+  .page-content-animate {
+    animation: pageContentIn 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  }
+
+  @keyframes pageContentIn {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* === 事实台账（页面末尾，滚动可见） === */
+  .ledger-section {
+    display: none; /* 手势Demo全屏，台账放底部隐藏页？不，放末尾滚动区 */
+  }
+
+  /* === 响应式：移动端全屏 === */
+  @media (max-width: 640px) {
+    .stage {
+      padding: 0;
+      background: var(--bg-deep);
+    }
+    .device-wrap {
+      width: 100%;
+      height: 100%;
+    }
+    .hint-text { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="hint-text">上滑翻页 · Swipe Up</div>
+
+  <div class="device-wrap" id="deviceContainer">
+    <!-- 动态渲染：手机框 or 全屏 -->
+  </div>
+</div>
+
+<!-- React -->
+<script src="https://sf3-scmcdn-cn.feishucdn.com/obj/feishu-static/miaoda/coding-unpkg-sdk/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://sf3-scmcdn-cn.feishucdn.com/obj/feishu-static/miaoda/coding-unpkg-sdk/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+<script src="https://sf3-scmcdn-cn.feishucdn.com/obj/feishu-static/miaoda/coding-unpkg-sdk/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<!-- 组件 -->
+<script type="text/babel">
+/* BEGIN USAGE */
+// iOS.jsx — Simplified iOS 26 (Liquid Glass) device frame
+// Based on the iOS 26 UI Kit + Figma status bar spec. No assets, no deps.
+// Exports (to window): IOSDevice, IOSStatusBar, IOSList, IOSListRow, IOSKeyboard
+//
+// Usage — wrap your screen content in <IOSDevice> to get the bezel, status bar
+// and home indicator (props: width=402, height=874, dark, keyboard):
+//
+//   <IOSDevice>
+//     ...your screen content...
+//   </IOSDevice>
+//   <IOSDevice dark keyboard>…</IOSDevice>
+//   <IOSDevice width={390} height={844}>…</IOSDevice>   // smaller device size
+//
+// Safe areas — REQUIRED on every screen. The status bar (top) and home
+// indicator (bottom) float OVER your content; inset it or it overlaps them.
+//   --ios-safe-top     top inset (Dynamic Island + status bar)
+//   --ios-safe-bottom  bottom inset (home indicator)
+/* END USAGE */
+
+// ─────────────────────────────────────────────────────────────
+// Status bar
+// ─────────────────────────────────────────────────────────────
+function IOSStatusBar({ dark = false, time = '9:41' }) {
+  const c = dark ? '#fff' : '#000';
+  return (
+    <div style={{
+      display: 'flex', gap: 154, alignItems: 'center', justifyContent: 'center',
+      padding: '21px 24px 19px', boxSizing: 'border-box',
+      position: 'relative', zIndex: 20, width: '100%',
+    }}>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 1.5 }}>
+        <span style={{
+          fontFamily: '-apple-system, "SF Pro", system-ui', fontWeight: 590,
+          fontSize: 17, lineHeight: '22px', color: c,
+        }}>{time}</span>
+      </div>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: 1, paddingRight: 1 }}>
+        <svg width="19" height="12" viewBox="0 0 19 12">
+          <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill={c}/>
+          <rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill={c}/>
+          <rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7" fill={c}/>
+          <rect x="14.4" y="0" width="3.2" height="12" rx="0.7" fill={c}/>
+        </svg>
+        <svg width="17" height="12" viewBox="0 0 17 12">
+          <path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill={c}/>
+          <path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill={c}/>
+          <circle cx="8.5" cy="10.5" r="1.5" fill={c}/>
+        </svg>
+        <svg width="27" height="13" viewBox="0 0 27 13">
+          <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke={c} strokeOpacity="0.35" fill="none"/>
+          <rect x="2" y="2" width="20" height="9" rx="2" fill={c}/>
+          <path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill={c} fillOpacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Grouped list (inset card, r:26) + row (52px)
+// ─────────────────────────────────────────────────────────────
+function IOSListRow({ title, detail, icon, chevron = true, isLast = false, dark = false }) {
+  const text = dark ? '#fff' : '#000';
+  const sec = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const ter = dark ? 'rgba(235,235,245,0.3)' : 'rgba(60,60,67,0.3)';
+  const sep = dark ? 'rgba(84,84,88,0.65)' : 'rgba(60,60,67,0.12)';
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', minHeight: 52,
+      padding: '0 16px', position: 'relative',
+      fontFamily: '-apple-system, system-ui', fontSize: 17,
+      letterSpacing: -0.43,
+    }}>
+      {icon && (
+        <div style={{
+          width: 30, height: 30, borderRadius: 7, background: icon,
+          marginRight: 12, flexShrink: 0,
+        }} />
+      )}
+      <div style={{ flex: 1, color: text }}>{title}</div>
+      {detail && <span style={{ color: sec, marginRight: 6 }}>{detail}</span>}
+      {chevron && (
+        <svg width="8" height="14" viewBox="0 0 8 14" style={{ flexShrink: 0 }}>
+          <path d="M1 1l6 6-6 6" stroke={ter} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+      {!isLast && (
+        <div style={{
+          position: 'absolute', bottom: 0, right: 0,
+          left: icon ? 58 : 16, height: 0.5, background: sep,
+        }} />
+      )}
+    </div>
+  );
+}
+
+function IOSList({ header, children, dark = false }) {
+  const hc = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const bg = dark ? '#1C1C1E' : '#fff';
+  return (
+    <div>
+      {header && (
+        <div style={{
+          fontFamily: '-apple-system, system-ui', fontSize: 13,
+          color: hc, textTransform: 'uppercase',
+          padding: '8px 36px 6px', letterSpacing: -0.08,
+        }}>{header}</div>
+      )}
+      <div style={{
+        background: bg, borderRadius: 26,
+        margin: '0 16px', overflow: 'hidden',
+      }}>{children}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Device frame
+// ─────────────────────────────────────────────────────────────
+function IOSDevice({
+  children, width = 402, height = 874, dark = false,
+  keyboard = false,
+}) {
+  return (
+    <div style={{
+      width, height, borderRadius: 48, overflow: 'hidden',
+      position: 'relative', background: dark ? '#000' : '#F2F2F7',
+      border: '1px solid #DEE0E3',
+      fontFamily: '-apple-system, system-ui, sans-serif',
+      WebkitFontSmoothing: 'antialiased',
+      '--ios-safe-top': '62px',
+      '--ios-safe-bottom': '34px',
+    }}>
+      {/* dynamic island */}
+      <div style={{
+        position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+        width: 126, height: 37, borderRadius: 24, background: '#000', zIndex: 50,
+      }} />
+      {/* status bar (absolute) */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <IOSStatusBar dark={dark} />
+      </div>
+      {/* content — isolate:isolate keeps the screen in its own stacking
+          context so any z-index authored inside it stays *below* the frame
+          chrome (status bar z:10, island z:50, home indicator z:60); a
+          sticky/opaque header with a high z-index can no longer paint over
+          the status bar. */}
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', isolation: 'isolate' }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
+        {keyboard && <IOSKeyboard dark={dark} />}
+      </div>
+      {/* home indicator — always on top */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 60,
+        height: 34, display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+        paddingBottom: 8, pointerEvents: 'none',
+      }}>
+        <div style={{
+          width: 139, height: 5, borderRadius: 100,
+          background: dark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.25)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Keyboard — iOS 26 liquid glass
+// ─────────────────────────────────────────────────────────────
+function IOSKeyboard({ dark = false }) {
+  const glyph = dark ? 'rgba(255,255,255,0.7)' : '#595959';
+  const sugg = dark ? 'rgba(255,255,255,0.6)' : '#333';
+  const keyBg = dark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.85)';
+
+  // special-key icons
+  const icons = {
+    shift: <svg width="19" height="17" viewBox="0 0 19 17"><path d="M9.5 1L1 9.5h4.5V16h8V9.5H18L9.5 1z" fill={glyph}/></svg>,
+    del: <svg width="23" height="17" viewBox="0 0 23 17"><path d="M7 1h13a2 2 0 012 2v11a2 2 0 01-2 2H7l-6-7.5L7 1z" fill="none" stroke={glyph} strokeWidth="1.6" strokeLinejoin="round"/><path d="M10 5l7 7M17 5l-7 7" stroke={glyph} strokeWidth="1.6" strokeLinecap="round"/></svg>,
+    ret: <svg width="20" height="14" viewBox="0 0 20 14"><path d="M18 1v6H4m0 0l4-4M4 7l4 4" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  };
+
+  const key = (content, { w, flex, ret, fs = 25, k } = {}) => (
+    <div key={k} style={{
+      height: 42, borderRadius: 8.5,
+      flex: flex ? 1 : undefined, width: w, minWidth: 0,
+      background: ret ? '#08f' : keyBg,
+      boxShadow: '0 1px 0 rgba(0,0,0,0.075)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: '-apple-system, "SF Compact", system-ui',
+      fontSize: fs, fontWeight: 458, color: ret ? '#fff' : glyph,
+    }}>{content}</div>
+  );
+
+  const row = (keys, pad = 0) => (
+    <div style={{ display: 'flex', gap: 6.5, justifyContent: 'center', padding: `0 ${pad}px` }}>
+      {keys.map(l => key(l, { flex: true, k: l }))}
+    </div>
+  );
+
+  return (
+    <div style={{
+      position: 'relative', zIndex: 15, borderRadius: 27, overflow: 'hidden',
+      padding: '11px 0 2px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      boxShadow: dark
+        ? '0 -2px 20px rgba(0,0,0,0.09)'
+        : '0 -1px 6px rgba(0,0,0,0.018), 0 -3px 20px rgba(0,0,0,0.012)',
+    }}>
+      {/* liquid glass bg — same recipe as nav pills */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 27,
+        backdropFilter: 'blur(12px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        background: dark ? 'rgba(120,120,128,0.14)' : 'rgba(255,255,255,0.25)',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 27,
+        boxShadow: dark
+          ? 'inset 1.5px 1.5px 1px rgba(255,255,255,0.15)'
+          : 'inset 1.5px 1.5px 1px rgba(255,255,255,0.7), inset -1px -1px 1px rgba(255,255,255,0.4)',
+        border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* autocorrect bar */}
+      <div style={{
+        display: 'flex', gap: 20, alignItems: 'center',
+        padding: '8px 22px 13px', width: '100%', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {['"The"', 'the', 'to'].map((w, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <div style={{ width: 1, height: 25, background: '#ccc', opacity: 0.3 }} />}
+            <div style={{
+              flex: 1, textAlign: 'center',
+              fontFamily: '-apple-system, system-ui', fontSize: 17,
+              color: sugg, letterSpacing: -0.43, lineHeight: '22px',
+            }}>{w}</div>
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* key layout */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: 13,
+        padding: '0 6.5px', width: '100%', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {row(['q','w','e','r','t','y','u','i','o','p'])}
+        {row(['a','s','d','f','g','h','j','k','l'], 20)}
+        <div style={{ display: 'flex', gap: 14.25, alignItems: 'center' }}>
+          {key(icons.shift, { w: 45, k: 'shift' })}
+          <div style={{ display: 'flex', gap: 6.5, flex: 1 }}>
+            {['z','x','c','v','b','n','m'].map(l => key(l, { flex: true, k: l }))}
+          </div>
+          {key(icons.del, { w: 45, k: 'del' })}
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {key('ABC', { w: 92.25, fs: 18, k: 'abc' })}
+          {key('', { flex: true, k: 'space' })}
+          {key(icons.ret, { w: 92.25, ret: true, k: 'ret' })}
+        </div>
+      </div>
+
+      {/* bottom spacer (emoji+mic area, icons omitted) */}
+      <div style={{ height: 56, width: '100%', position: 'relative' }} />
+    </div>
+  );
+}
+
+Object.assign(window, {
+  IOSDevice, IOSStatusBar, IOSList, IOSListRow, IOSKeyboard,
+});
+
+</script>
+
+<script type="text/babel">
+const { useState, useRef, useEffect, useCallback } = React;
+
+// ========= 底部箭头组件 =========
+function ArrowHint() {
+  return (
+    <div className="arrow-hint">
+      <span className="arrow-hint-text">上滑查看</span>
+      <div className="arrow-svg">
+        <svg viewBox="0 0 24 24">
+          <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ========= 侧边页面指示器 =========
+function PageIndicator({ current, total = 3 }) {
+  return (
+    <div className="page-indicator">
+      {Array.from({ length: total }).map((_, i) => (
+        <div
+          key={i}
+          className={`indicator-dot ${i === current ? 'active' : ''}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ========= 装饰角框 =========
+function Corners() {
+  return (
+    <>
+      <div className="corner tl"></div>
+      <div className="corner tr"></div>
+      <div className="corner bl"></div>
+      <div className="corner br"></div>
+    </>
+  );
+}
+
+// ========= 第一页 =========
+function Page1({ isActive }) {
+  return (
+    <div className="page page-1">
+      <div className="bg-layer"></div>
+      <div className="bg-pattern"></div>
+      <div className="decor-text-vertical" style={{ top: 60, left: 20 }}>
+        鳳凰谷
+      </div>
+      <div className="decor-text-vertical" style={{ bottom: 120, right: 20 }}>
+        誠摯邀請
+      </div>
+      <div className="page-inner" key={isActive ? 'in' : 'out'}>
+        <div className="page-content-animate" style={{ animationDelay: '0.1s' }}>
+          <div className="invite-label">INVITATION · 邀请函</div>
+        </div>
+        <div className="page-content-animate" style={{ animationDelay: '0.3s' }}>
+          <h1 className="main-title">
+            凤凰谷<br/>康养盛启
+          </h1>
+        </div>
+        <div className="page-content-animate" style={{ animationDelay: '0.45s' }}>
+          <div className="subtitle-en">PHOENIX VALLEY · GRAND OPENING</div>
+        </div>
+        <div className="page-content-animate" style={{ animationDelay: '0.6s' }}>
+          <div className="divider-gold"></div>
+        </div>
+        <div className="page-content-animate" style={{ animationDelay: '0.75s' }}>
+          <p className="invite-msg">
+            谨致 <strong>尊敬的阁下</strong><br/>
+            诚邀您拨冗出席<br/>
+            共赴一场山水与健康的臻美之约
+          </p>
+        </div>
+      </div>
+      <ArrowHint />
+      <Corners />
+    </div>
+  );
+}
+
+// ========= 第二页 =========
+function Page2({ isActive }) {
+  return (
+    <div className="page page-2">
+      <div className="bg-layer"></div>
+      <div className="bg-pattern"></div>
+      <div className="page-inner">
+        <div className="page-content-animate" style={{ animationDelay: '0.1s' }}>
+          <div className="page-eyebrow">项 目 亮 点</div>
+        </div>
+        <div className="page-content-animate" style={{ animationDelay: '0.25s' }}>
+          <h2 className="page-title">筑境山水 · 康养臻境</h2>
+        </div>
+        <div className="page-content-animate" style={{ animationDelay: '0.4s' }}>
+          <p className="page-subtitle">THREE PILLARS OF WELLNESS</p>
+        </div>
+
+        <div className="feature-list">
+          <div className="feature-item page-content-animate" style={{ animationDelay: '0.55s' }}>
+            <div className="feature-num">壹</div>
+            <div className="feature-content">
+              <h4>生态康养</h4>
+              <p>依山傍水，负氧离子环绕，以自然之力滋养身心，打造沉浸式康养体验。</p>
+            </div>
+          </div>
+          <div className="feature-item page-content-animate" style={{ animationDelay: '0.7s' }}>
+            <div className="feature-num">贰</div>
+            <div className="feature-content">
+              <h4>至臻服务</h4>
+              <p>一对一专属管家，整合优质医疗资源，全方位守护健康生活每一天。</p>
+            </div>
+          </div>
+          <div className="feature-item page-content-animate" style={{ animationDelay: '0.85s' }}>
+            <div className="feature-num">叁</div>
+            <div className="feature-content">
+              <h4>圈层雅集</h4>
+              <p>私享社交空间，定期文化雅集与健康沙龙，汇聚志同道合的时代精英。</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="seal-badge page-content-animate" style={{ animationDelay: '1s' }}>
+          <div className="seal-inner">臻品</div>
+        </div>
+      </div>
+      <ArrowHint />
+      <Corners />
+    </div>
+  );
+}
+
+// ========= 第三页 =========
+function Page3({ isActive }) {
+  const RESERVE_URL = 'https://andydevcn.github.io/fenghuanggu-prototype/';
+  const handleReserve = (e) => {
+    // 真实 <a> 标签已处理默认跳转，这里仅作为兜底
+    // 若 webview 拦截了 _blank，则降级为当前页跳转
+    try {
+      const w = window.open(RESERVE_URL, '_blank', 'noopener,noreferrer');
+      if (!w) {
+        e.preventDefault();
+        window.location.href = RESERVE_URL;
+      }
+    } catch (err) {
+      e.preventDefault();
+      window.location.href = RESERVE_URL;
+    }
+  };
+
+  return (
+    <div className="page page-3">
+      <div className="bg-layer"></div>
+      <div className="bg-pattern"></div>
+      <div className="page-inner">
+        <div className="final-emblem page-content-animate" style={{ animationDelay: '0.1s' }}>
+          <div className="final-emblem-inner">邀</div>
+        </div>
+        <div className="page-content-animate" style={{ animationDelay: '0.3s' }}>
+          <h2 className="final-title">
+            敬候<br/>君临
+          </h2>
+        </div>
+        <div className="page-content-animate" style={{ animationDelay: '0.5s' }}>
+          <p className="final-subtitle">
+            期待与您共襄盛举<br/>
+            见证凤凰谷璀璨启幕
+          </p>
+        </div>
+        <div className="page-content-animate" style={{ animationDelay: '0.7s' }}>
+          <a
+            className="cta-btn"
+            href={RESERVE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleReserve}
+          >
+            立 即 预 约
+          </a>
+        </div>
+      </div>
+      <Corners />
+    </div>
+  );
+}
+
+// ========= 主 App：手势翻页容器 =========
+function InvitationApp() {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const touchStartY = useRef(0);
+  const touchStartTime = useRef(0);
+  const containerRef = useRef(null);
+
+  const totalPages = 3;
+
+  const goToPage = useCallback((index) => {
+    if (index < 0 || index >= totalPages) return;
+    setCurrentPage(index);
+  }, []);
+
+  // 触摸/鼠标手势
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const getY = (e) => {
+      if (e.touches && e.touches.length) return e.touches[0].clientY;
+      if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientY;
+      return e.clientY;
+    };
+
+    const onStart = (e) => {
+      setIsDragging(true);
+      touchStartY.current = getY(e);
+      touchStartTime.current = Date.now();
+    };
+
+    const onMove = (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const y = getY(e);
+      let diff = touchStartY.current - y;
+
+      // 边界阻尼
+      if (currentPage === 0 && diff < 0) diff *= 0.3;
+      if (currentPage === totalPages - 1 && diff > 0) diff *= 0.3;
+
+      setDragOffset(diff);
+    };
+
+    const onEnd = (e) => {
+      if (!isDragging) return;
+      setIsDragging(false);
+
+      const y = getY(e);
+      const diff = touchStartY.current - y;
+      const dt = Date.now() - touchStartTime.current;
+      const velocity = diff / dt; // px/ms
+
+      const threshold = el.clientHeight * 0.2;
+
+      if (diff > threshold || velocity > 0.3) {
+        // 向上滑 -> 下一页
+        goToPage(currentPage + 1);
+      } else if (diff < -threshold || velocity < -0.3) {
+        // 向下滑 -> 上一页
+        goToPage(currentPage - 1);
+      }
+
+      setDragOffset(0);
+    };
+
+    // 触摸事件
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd);
+    el.addEventListener('touchcancel', onEnd);
+
+    // 鼠标拖拽（桌面演示）
+    el.addEventListener('mousedown', onStart);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+
+    // 滚轮（桌面演示）
+    let wheelLock = false;
+    const onWheel = (e) => {
+      if (wheelLock) return;
+      if (Math.abs(e.deltaY) < 20) return;
+      wheelLock = true;
+      if (e.deltaY > 0) goToPage(currentPage + 1);
+      else goToPage(currentPage - 1);
+      setTimeout(() => { wheelLock = false; }, 900);
+    };
+    el.addEventListener('wheel', onWheel, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+      el.removeEventListener('touchcancel', onEnd);
+      el.removeEventListener('mousedown', onStart);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+      el.removeEventListener('wheel', onWheel);
+    };
+  }, [isDragging, currentPage, dragOffset, goToPage]);
+
+  const translateY = -currentPage * 100 - (isDragging ? (dragOffset / (containerRef.current?.clientHeight || 1)) * 100 : 0);
+
+  return (
+    <div className="phone-screen" ref={containerRef}>
+      <div
+        className="pages"
+        style={{
+          transform: `translateY(${translateY}%)`,
+          transition: isDragging ? 'none' : 'transform 0.9s cubic-bezier(0.65, 0, 0.35, 1)',
+        }}
+      >
+        <Page1 isActive={currentPage === 0} />
+        <Page2 isActive={currentPage === 1} />
+        <Page3 isActive={currentPage === 2} />
+      </div>
+      <PageIndicator current={currentPage} total={3} />
+    </div>
+  );
+}
+
+// ========= 渲染：桌面套手机框 / 移动全屏 =========
+function Root() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  if (isMobile) {
+    return <InvitationApp />;
+  }
+
+  return (
+    <IOSDevice width={390} height={844} dark>
+      <InvitationApp />
+    </IOSDevice>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('deviceContainer'));
+root.render(<Root />);
+</script>
+
+<!-- 事实台账（页面末尾） -->
+<div style="display:none;" aria-hidden="true"></div>
+
+</body>
+</html>
